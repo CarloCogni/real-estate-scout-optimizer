@@ -1,0 +1,17 @@
+[project]
+name = "real-estate-scout-optimizer"
+version = "0.1.0"
+description = "Real estate investment analysis with Smart Score"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "adjusttext>=1.3.0",
+    "folium>=0.20.0",
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.0",
+    "pandas>=2.3.3",
+    "scipy>=1.16.3",
+    "seaborn>=0.13.2",
+    "streamlit>=1.52.2",
+    "streamlit-folium>=0.25.3",
+]

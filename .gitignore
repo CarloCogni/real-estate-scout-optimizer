@@ -205,3 +205,23 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Virtual environment
+.venv/
+venv/
+
+# Data files (non committare CSV pesanti)
+data/*.csv
+outputs/*.csv
+outputs/*.html
+
+# Streamlit
+.streamlit/secrets.toml
+
+# UV
+uv.lock
+
+# IDE
+.idea/
+*.pyc
+__pycache__/
