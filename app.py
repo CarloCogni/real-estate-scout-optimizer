@@ -329,7 +329,7 @@ else:
             run_analysis = st.button(
                 "🚀 Run Complete Analysis",
                 type="primary",
-                use_container_width=True
+                width="stretch",
             )
 
         if run_analysis:
@@ -765,7 +765,7 @@ if st.session_state.analysis_complete:
 
         if use_interactive:
             fig = plot_strategic_zones_interactive(strategic_zones)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
         else:
             fig = plot_strategic_zones(strategic_zones)
             st.pyplot(fig)
@@ -813,7 +813,7 @@ if st.session_state.analysis_complete:
                 data=csv_action,
                 file_name="action_list_optimized.csv",
                 mime="text/csv",
-                use_container_width=True
+                width="stretch"
             )
 
         st.divider()
@@ -832,7 +832,7 @@ if st.session_state.analysis_complete:
                 data=csv_full,
                 file_name="kc_housing_smart_strategy.csv",
                 mime="text/csv",
-                use_container_width=True
+                width="stretch"
             )
 
         st.divider()
