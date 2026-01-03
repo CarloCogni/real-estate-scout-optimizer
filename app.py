@@ -95,7 +95,7 @@ if 'df_raw' not in st.session_state:
 # =============================================================================
 st.title("🏠 Real Estate Scout Optimizer")
 st.markdown("### Data-Driven Investment Analysis Tool")
-st.markdown("*Developed for ZIGURAT Master in AI for Architecture and Construction | M3U1&U2 Assignment*")
+st.markdown("*Developed for ZIGURAT Master in AI for Architecture and Construction | M3U1&U2 Assignment | Group 4*")
 st.divider()
 
 # =============================================================================
