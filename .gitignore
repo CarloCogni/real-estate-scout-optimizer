@@ -212,6 +212,8 @@ venv/
 
 # Data files (non committare CSV pesanti)
 data/*.csv
+# EXCEPT the demo dataset
+!data/MAICEN_1125_M3_U1&U2_Assignment input.csv
 outputs/*.csv
 outputs/*.html
 
