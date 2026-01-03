@@ -6,7 +6,7 @@
 
 **Investment analysis tool for real estate opportunities using data-driven scoring algorithms.**
 
-🌐 **[Try Live Demo](https://your-app-url.streamlit.app)**
+🌐 **[Try Live Demo](https://https://real-estate-scout-optimizer.streamlit.app/)**
 
 ---
 
