@@ -260,7 +260,7 @@ See [LICENSE](LICENSE) file for full terms.
 - **Open Source Community** - For the amazing Python libraries
 
 ---
-*Built with ❤️ using Python, Streamlit, and data science best practices.*
+*Built with ❤️ using Python, Streamlit, and data science best practices. Cheers!*
 ```
 
                     GNU AFFERO GENERAL PUBLIC LICENSE
