@@ -104,32 +104,86 @@ st.divider()
 with st.sidebar:
     st.header("⚙️ Configuration")
 
+    # Handle Query Params (The "Magic Link" feature)
+    # This allows the app to read 'file_id' from the browser URL
+    query_params = st.query_params
+    default_drive_url = ""
+
+    # If a file_id exists in the URL, pre-load it
+    if "file_id" in query_params:
+        default_drive_url = f"https://drive.google.com/file/d/{query_params['file_id']}"
+        # If we just arrived via a link, force the source to Cloud
+        if 'last_file_source' not in st.session_state:
+            st.session_state.last_file_source = "☁️ Connect to Cloud (Google Drive)"
+
     # File source selection
     st.subheader("📁 Data Source")
 
     data_source = st.radio(
         "Choose data source:",
-        ["📊 Use Demo Dataset (KC Housing)", "📤 Upload Your Own CSV"],
-        help="Demo dataset shows full functionality. Upload your own for custom analysis."
+        [
+            "📊 Use Demo Dataset (KC Housing)",
+            "📤 Upload Your Own CSV",
+            "☁️ Connect to Cloud (Google Drive)"  # NEW OPTION
+        ],
+        help="Connect to a live Google Drive CSV for dynamic updates."
     )
 
     uploaded_file = None
 
+    # --- LOGIC FOR EACH SOURCE ---
+
+    # CASE 1: MANUAL UPLOAD
     if data_source == "📤 Upload Your Own CSV":
         uploaded_file = st.file_uploader(
             "Upload Housing Dataset",
             type=['csv'],
-            help="CSV must include: id, price, bedrooms, bathrooms, sqft_living, sqft_lot, condition, grade, yr_built, zipcode, lat, long"
+            help="CSV must include standard columns."
         )
+        # Clear query params if switching modes to avoid confusion
+        st.query_params.clear()
+
+    # CASE 2: CLOUD (GOOGLE DRIVE)
+    elif data_source == "☁️ Connect to Cloud (Google Drive)":
+        # Import utility functions here to avoid circular imports at top level
+        from modules.utils import extract_drive_id, get_drive_download_url
+
+        drive_url_input = st.text_input(
+            "Paste Google Drive Link (CSV)",
+            value=default_drive_url,
+            placeholder="https://drive.google.com/file/d/..."
+        )
+
+        if drive_url_input:
+            file_id = extract_drive_id(drive_url_input)
+            if file_id:
+                # 1. Create direct download URL
+                direct_url = get_drive_download_url(file_id)
+                uploaded_file = direct_url  # Pandas accepts URLs directly!
+
+                # 2. Update Browser URL (The "Manager Trick")
+                # This makes the current view shareable/bookmarkable
+                st.query_params["file_id"] = file_id
+
+                st.success(f"✅ Link Valid! ID: {file_id[:5]}...")
+                st.caption("ℹ️ Bookmark this page URL to return to this specific live dataset.")
+            else:
+                st.error("❌ Invalid Google Drive Link")
+        else:
+            st.info("Paste a 'Share' link from Google Drive (ensure it is set to 'Anyone with the link')")
+
+    # CASE 3: DEMO DATASET
     else:
-        # Use demo dataset
+        # Use demo dataset path
         demo_path = os.path.join('data', 'MAICEN_1125_M3_U1&U2_Assignment input.csv')
         if os.path.exists(demo_path):
             uploaded_file = demo_path
             st.success("✅ Demo dataset loaded")
         else:
-            st.error("❌ Demo dataset not found. Please upload a file.")
-            uploaded_file = None
+            st.error("❌ Demo dataset not found.")
+
+        # Clear query params
+        st.query_params.clear()
 
     # Reset analysis if file source changes
     if 'last_file_source' not in st.session_state:

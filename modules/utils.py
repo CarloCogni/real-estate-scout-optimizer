@@ -1,9 +1,9 @@
 """
 Utility functions for formatting, display, and common operations
 """
-
 import pandas as pd
 import streamlit as st
+import re
 
 
 # =============================================================================
@@ -206,3 +206,42 @@ def get_summary_stats(series: pd.Series) -> dict:
         'skew': series.skew(),
         'kurtosis': series.kurtosis()
     }
+
+
+def extract_drive_id(url: str) -> str:
+    """
+    Extracts the File ID from a Google Drive URL.
+    Supports standard view links and ID-only strings.
+
+    Args:
+        url: The full Google Drive URL or ID string
+
+    Returns:
+        The extracted file ID or None if not found
+    """
+    # Regex patterns to find ID (alphanumeric string between slashes or parameters)
+    patterns = [
+        r'/d/([a-zA-Z0-9_-]{20,})',  # standard view url
+        r'id=([a-zA-Z0-9_-]{20,})',  # direct link
+        r'^([a-zA-Z0-9_-]{20,})$'  # raw id input
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+
+    return None
+
+
+def get_drive_download_url(file_id: str) -> str:
+    """
+    Creates a direct download URL for pandas to read.
+
+    Args:
+        file_id: The Google Drive file ID
+
+    Returns:
+        Direct download URL string
+    """
+    return f'https://drive.google.com/uc?id={file_id}'
