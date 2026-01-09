@@ -6,8 +6,7 @@
 
 **Investment analysis tool for real estate opportunities using data-driven scoring algorithms.**
 
-🌐 **[Try Live Demo](https://https://real-estate-scout-optimizer.streamlit.app/)**
-
+🌐 **[Try Live Demo](https://real-estate-scout-optimizer.streamlit.app/)**
 ---
 
 ## 📋 Table of Contents
@@ -35,6 +34,11 @@ The **Real Estate Scout Optimizer** is a comprehensive web application that anal
 ---
 
 ## ✨ Key Features
+
+### ☁️ **Dynamic Intelligence Dashboard** (New)
+- **Live Cloud Link**: Connect directly to Google Drive datasets via URL.
+- **Magic Links**: The app updates the browser URL with your data source, creating **bookmarkable dashboards** that auto-update when the source CSV changes.
+- **No Database Required**: State persistence handled via URL query parameters.
 
 ### 📊 **Smart Analysis**
 - Market distribution analysis with statistical validation
@@ -157,20 +161,20 @@ Then open your browser to `http://localhost:8501`
 ### **Using the App**
 
 1. **Choose Data Source**:
-   - Use demo dataset (KC Housing data)
-   - Upload your own CSV file
+   - **Demo Dataset**: Use the pre-loaded KC Housing data to explore features.
+   - **Upload CSV**: Upload a local file for ad-hoc analysis.
+   - **☁️ Connect to Cloud**: Paste a Google Drive "Share" link (set to *Anyone with the link*).
 
-2. **Set Parameters**:
-   - Adjust maximum acquisition budget ($100K-$500K)
+2. **Bookmark Your Dashboard**:
+   - When using the Cloud Link, the app URL updates automatically.
+   - **Save this URL**. Opening it later will reload the live data from Google Drive automatically.
 
-3. **Run Analysis**:
-   - Click "🚀 Run Complete Analysis"
-   - Wait 30-60 seconds for processing
+3. **Set Parameters**:
+   - Adjust maximum acquisition budget ($100K-$500K).
 
-4. **Explore Results**:
-   - Navigate through 6 analysis tabs
-   - Download prioritized action lists
-   - View interactive maps and charts
+4. **Run Analysis**:
+   - Click "🚀 Run Complete Analysis".
+   - Navigate through the analysis tabs and download reports.
 
 ---
 
