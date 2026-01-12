@@ -350,55 +350,52 @@ def plot_condition_strategy(df: pd.DataFrame, max_budget: int) -> plt.Figure:
 def plot_vintage_value(df: pd.DataFrame, optimal_decades: list, market_median: float) -> plt.Figure:
     """
     Creates line plot of profit by construction decade (Chunk 3.6).
-
-    CACHED: Plot generation is deterministic.
-
-    Args:
-        df: Market context dataframe with 'decade' column
-        optimal_decades: List of optimal decades
-        market_median: Median threshold for highlighting
-
-    Returns:
-        Matplotlib figure
     """
-    # ✅ FIX: Ensure decade column exists (create if missing)
-    df = df.copy()  # Make a copy to avoid modifying original
-    if 'decade' not in df.columns:
-        df['decade'] = (df['yr_built'] // 10) * 10
+    # 1. CLEANING: Filter out bad years (Year 0 or very old outliers)
+    # This prevents the "long diagonal line" from year 0 to 1900
+    df_viz = df[df['yr_built'] >= 1900].copy()
+
+    # 2. Create Decade Column
+    df_viz['decade'] = (df_viz['yr_built'] // 10) * 10
 
     fig, ax = plt.subplots(figsize=(12, 6))
 
-    # Calculate median per decade
-    decade_median = df.groupby('decade')['price_gap'].median().reset_index()
+    # 3. Calculate median per decade on the CLEANED data
+    decade_median = df_viz.groupby('decade')['price_gap'].median().reset_index()
 
+    # Plot Line
     ax.plot(decade_median['decade'], decade_median['price_gap'],
             marker='o', color='purple', linewidth=2, markersize=8)
 
     # Highlight optimal decades
     for decade in optimal_decades:
-        ax.axvspan(decade, decade + 10, alpha=0.2, color='gold')
+        # Only highlight if within visible range
+        if decade >= 1900:
+            ax.axvspan(decade, decade + 10, alpha=0.2, color='gold', linewidth=0)
 
     # Reference lines
     ax.axhline(0, color='red', linestyle='--', alpha=0.5, label='Break-even (Zero Profit)')
     ax.axhline(market_median, color='blue', linestyle='--', alpha=0.7,
                label=f'Market Median: ${market_median:,.0f}')
 
-    # Set range
-    min_decade = df['decade'].min()
-    max_decade = df['decade'].max()
+    # 4. Set Intelligent X-Axis Limits
+    min_decade = 1900  # Force start at 1900
+    max_decade = df_viz['decade'].max()
     ax.set_xlim(min_decade - 5, max_decade + 15)
 
+    # Formatting
     ax.set_title(f'Vintage Value: Optimal Decades Highlighted\nOptimal: {optimal_decades}',
                  fontsize=14, fontweight='bold')
     ax.set_xlabel('Construction Decade', fontsize=12)
     ax.set_ylabel('Median Price Gap ($)', fontsize=12)
     ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('${x:,.0f}'))
+
+    # Add legend
     ax.legend(loc='lower left')
     ax.grid(True, linestyle='--', alpha=0.3)
 
     plt.tight_layout()
     return fig
-
 
 # =============================================================================
 # CHUNK 3.7: GRADE VALUE
@@ -408,16 +405,6 @@ def plot_vintage_value(df: pd.DataFrame, optimal_decades: list, market_median: f
 def plot_grade_value(df: pd.DataFrame, optimal_grades: list, market_median: float) -> plt.Figure:
     """
     Creates bar plot of profit by building grade (Chunk 3.7).
-
-    CACHED: Plot generation is deterministic.
-
-    Args:
-        df: Market context dataframe
-        optimal_grades: List of optimal grades
-        market_median: Median threshold for highlighting
-
-    Returns:
-        Matplotlib figure
     """
     fig, ax = plt.subplots(figsize=(12, 6))
 
@@ -436,11 +423,18 @@ def plot_grade_value(df: pd.DataFrame, optimal_grades: list, market_median: floa
     ax.set_title(f'Grade Value: Optimal Grades = {optimal_grades}', fontsize=14, fontweight='bold')
     ax.set_xlabel('Building Grade', fontsize=12)
     ax.set_ylabel('Median Price Gap ($)', fontsize=12)
+
+    # --- UPDATE: FIX Y-AXIS TICKS ---
+    from matplotlib.ticker import MultipleLocator
+    ax.yaxis.set_major_locator(MultipleLocator(250000))  # Tacche ogni 250k
     ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('${x:,.0f}'))
-    ax.axhline(market_median, color='red', linestyle='--',
+
+    # Linee di riferimento
+    ax.axhline(market_median, color='red', linestyle='--', linewidth=2,
                label=f'Market Median: ${market_median:,.0f}')
-    ax.axhline(0, color='grey', linestyle='-', alpha=0.3)
-    ax.legend()
+    ax.axhline(0, color='black', linestyle='-', linewidth=1, alpha=0.5)
+
+    ax.legend(loc='upper right')  # Spostato legenda per non coprire le barre
     ax.grid(True, axis='y', alpha=0.3)
 
     plt.tight_layout()
@@ -587,49 +581,53 @@ def _format_thousands(x, pos):
     return f'${x / 1000:.0f}K'
 
 
+# =============================================================================
+# CHUNK 6: STRATEGIC ZONES SCATTER (STATIC)
+# =============================================================================
+# --- 1. GLOBAL HELPER FUNCTION (MUST BE HERE TO FIX PICKLE ERROR) ---
+def _format_thousands_axis(x, pos):
+    """Helper for axis formatting, defined globally for pickling."""
+    return f'${x/1000:.0f}K'
+
 @st.cache_data(show_spinner=False)
 def plot_strategic_zones(zip_strategy: pd.DataFrame) -> plt.Figure:
     """
     Creates scatter plot of zipcodes by volume and profit (Chunk 6).
-
-    CACHED: Plot generation is deterministic.
-
-    Args:
-        zip_strategy: Zipcode aggregation from chunk_06_strategic_zones
-
-    Returns:
-        Matplotlib figure
+    UPDATED: Uses Median logic and adapted scales.
     """
+    # 1. Filter: Relax constraint to show more zones
+    zip_strategy_filtered = zip_strategy[zip_strategy['opportunity_count'] >= 2].copy()
+
     fig, ax = plt.subplots(figsize=(14, 10))
 
     # Create scatter
     scatter = ax.scatter(
-        zip_strategy['opportunity_count'],
-        zip_strategy['avg_potential_profit'],
-        s=zip_strategy['zip_avg_price'] / 1000,  # Size by neighborhood value
-        c=zip_strategy['avg_potential_profit'],
+        zip_strategy_filtered['opportunity_count'],
+        zip_strategy_filtered['avg_potential_profit'],  # This column actually holds the MEDIAN now
+        s=zip_strategy_filtered['zip_avg_price'] / 1000,
+        c=zip_strategy_filtered['avg_potential_profit'],
         cmap='viridis',
         alpha=0.7,
         edgecolors='black',
         linewidth=0.5
     )
 
-    # Reference lines
-    avg_profit = zip_strategy['avg_potential_profit'].mean()
-    avg_count = zip_strategy['opportunity_count'].mean()
+    # Reference lines (Median-based)
+    median_profit = zip_strategy_filtered['avg_potential_profit'].median()
+    median_vol = zip_strategy_filtered['opportunity_count'].median()
 
-    ax.axhline(avg_profit, color='red', linestyle='--', alpha=0.5, linewidth=2)
-    ax.text(zip_strategy['opportunity_count'].max(), avg_profit + 5000,
-            f' Avg Profit: ${avg_profit / 1000:.0f}K',
+    ax.axhline(median_profit, color='red', linestyle='--', alpha=0.5, linewidth=2)
+    ax.text(zip_strategy_filtered['opportunity_count'].max(), median_profit + 2000,
+            f' Median Profit: ${median_profit / 1000:.0f}K',
             color='red', fontsize=10, fontweight='bold', ha='right')
 
-    ax.axvline(avg_count, color='blue', linestyle='--', alpha=0.5, linewidth=2)
-    ax.text(avg_count + 1, zip_strategy['avg_potential_profit'].max(),
-            f' Avg Vol: {avg_count:.0f}',
+    ax.axvline(median_vol, color='blue', linestyle='--', alpha=0.5, linewidth=2)
+    ax.text(median_vol + 0.1, zip_strategy_filtered['avg_potential_profit'].max(),
+            f' Med Vol: {median_vol:.0f}',
             color='blue', fontsize=10, fontweight='bold', rotation=90, va='top')
 
     # Label top 5 zipcodes
-    top_5 = zip_strategy.nlargest(5, 'avg_potential_profit')
+    top_5 = zip_strategy_filtered.nlargest(5, 'avg_potential_profit')
     for idx, row in top_5.iterrows():
         ax.annotate(
             f"{int(row['zipcode'])}",
@@ -641,19 +639,20 @@ def plot_strategic_zones(zip_strategy: pd.DataFrame) -> plt.Figure:
         )
 
     # Formatting
-    ax.set_title('STRATEGIC ZONES: Profit vs. Volume', fontsize=18, fontweight='bold')
+    ax.set_title('STRATEGIC ZONES: Profit vs. Volume (Median Adjusted)', fontsize=18, fontweight='bold')
     ax.set_xlabel('Volume of Opportunities (Number of Houses)', fontsize=12)
-    ax.set_ylabel('Avg. Potential Profit per House', fontsize=12)
+    ax.set_ylabel('Median Potential Profit per House', fontsize=12)
 
-    # FIX: Use the module-level function instead of lambda
-    ax.yaxis.set_major_formatter(ticker.FuncFormatter(_format_thousands))
+    # Then inside plot_strategic_zones:
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(_format_thousands_axis))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(25000))  # 25k ticks
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(2))  # 2 unit ticks
 
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
     ax.grid(True, linestyle='--', alpha=0.3)
 
     # Colorbar
     cbar = plt.colorbar(scatter, ax=ax)
-    cbar.set_label('Avg Profit ($)', rotation=270, labelpad=20)
+    cbar.set_label('Median Profit ($)', rotation=270, labelpad=20)
 
     plt.tight_layout()
     return fig

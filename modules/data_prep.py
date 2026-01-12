@@ -37,8 +37,8 @@ def chunk_01_data_cleaning(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
     df_clean['is_renovated'] = df_clean['yr_renovated'].apply(lambda x: 1 if x > 0 else 0)
 
     # Identify missing value columns
-    cols_to_fix_zero = ['bedrooms', 'bathrooms', 'sqft_lot']
-    cols_to_fix_nan = ['condition', 'grade', 'yr_built']
+    cols_to_fix_zero = ['bedrooms', 'bathrooms', 'sqft_lot', 'yr_built']
+    cols_to_fix_nan = ['condition', 'grade',]
 
     # Replace 0 with NaN where 0 means "missing"
     for col in cols_to_fix_zero:
@@ -46,6 +46,19 @@ def chunk_01_data_cleaning(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict]:
         if zeros_count > 0:
             df_clean[col] = df_clean[col].replace(0, np.nan)
             audit_report[f'{col}_zeros_found'] = zeros_count
+
+        # --- LOGIC PATCH START: sqft_above calculation ---
+        # Logic: sqft_living = sqft_above + sqft_basement
+        # We calculate missing 'sqft_above' mathematically instead of guessing with median.
+        if 'sqft_above' in df_clean.columns and 'sqft_basement' in df_clean.columns:
+            # 1. Fill NaNs using the formula
+            df_clean['sqft_above'] = df_clean['sqft_above'].fillna(
+                df_clean['sqft_living'] - df_clean['sqft_basement']
+            )
+
+            # 2. Safety check: ensure no negative values (clamp to 0)
+            df_clean['sqft_above'] = df_clean['sqft_above'].apply(lambda x: max(x, 0) if pd.notnull(x) else x)
+        # --- LOGIC PATCH END ---
 
     # Smart Imputation: Zipcode-aware
     all_cols_to_impute = cols_to_fix_zero + cols_to_fix_nan
@@ -102,7 +115,7 @@ def chunk_02_market_context(df: pd.DataFrame) -> pd.DataFrame:
     df_context = df.copy()
 
     # A. Price Gap (Absolute $)
-    zip_stats = df_context.groupby('zipcode')['price'].mean().reset_index()
+    zip_stats = df_context.groupby('zipcode')['price'].median().reset_index()
     zip_stats.rename(columns={'price': 'zip_avg_price'}, inplace=True)
     df_context = df_context.merge(zip_stats, on='zipcode', how='left')
     df_context['price_gap'] = df_context['zip_avg_price'] - df_context['price']

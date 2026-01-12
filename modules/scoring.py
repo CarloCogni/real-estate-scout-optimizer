@@ -198,7 +198,7 @@ def chunk_05b_validate_score(df_ranked: pd.DataFrame) -> Dict:
 # =============================================================================
 
 @st.cache_data(show_spinner="🗺️ Identifying strategic zones...")
-def chunk_06_strategic_zones(df_ranked: pd.DataFrame, min_properties: int = 5) -> pd.DataFrame:
+def chunk_06_strategic_zones(df_ranked: pd.DataFrame, min_properties: int = 2) -> pd.DataFrame:
     """
     Identifies best zipcodes for geographic targeting (Chunk 6 from Colab).
 
@@ -215,8 +215,8 @@ def chunk_06_strategic_zones(df_ranked: pd.DataFrame, min_properties: int = 5) -
     """
     zip_strategy = df_ranked.groupby('zipcode').agg({
         'id': 'count',
-        'price_gap': 'mean',
-        'zip_avg_price': 'mean',
+        'price_gap': 'median',
+        'zip_avg_price': 'median',
         'SMART_SCORE': 'mean'
     }).reset_index()
 
