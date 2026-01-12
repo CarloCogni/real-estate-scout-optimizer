@@ -715,8 +715,8 @@ def create_interactive_map(top_targets: pd.DataFrame, _center_coords: list = Non
         # Color for efficiency
         sqft_color = '#008800' if row['sqft_gap'] > 0 else '#cc0000'
 
-        # Radius based on profit
-        radius = (row['price_gap'] / 60000) + 4
+        gap_val = max(row['price_gap'], 0)  # Ensure no negative radius
+        radius = (gap_val / 12000) + 6
 
         # HTML Popup
         popup_html = f"""
