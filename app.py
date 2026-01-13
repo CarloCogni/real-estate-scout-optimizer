@@ -105,16 +105,26 @@ with st.sidebar:
     st.header("⚙️ Configuration")
 
     # Handle Query Params (The "Magic Link" feature)
-    # This allows the app to read 'file_id' from the browser URL
     query_params = st.query_params
     default_drive_url = ""
 
-    # If a file_id exists in the URL, pre-load it
+    # Calcoliamo l'indice di default per il Radio Button
+    # 0 = Demo, 1 = Upload, 2 = Cloud
+    radio_index = 0
+
+    # Se c'è un file_id nell'URL, forziamo l'indice su 2 (Cloud)
     if "file_id" in query_params:
         default_drive_url = f"https://drive.google.com/file/d/{query_params['file_id']}"
-        # If we just arrived via a link, force the source to Cloud
+        radio_index = 2
+        # Setup session state per coerenza immediata
         if 'last_file_source' not in st.session_state:
             st.session_state.last_file_source = "☁️ Connect to Cloud (Google Drive)"
+
+    # Se l'utente aveva già selezionato Cloud in precedenza (senza magic link), manteniamo la selezione
+    elif 'last_file_source' in st.session_state and st.session_state.last_file_source == "☁️ Connect to Cloud (Google Drive)":
+        radio_index = 2
+    elif 'last_file_source' in st.session_state and st.session_state.last_file_source == "📤 Upload Your Own CSV":
+        radio_index = 1
 
     # File source selection
     st.subheader("📁 Data Source")
@@ -124,8 +134,9 @@ with st.sidebar:
         [
             "📊 Use Demo Dataset (KC Housing)",
             "📤 Upload Your Own CSV",
-            "☁️ Connect to Cloud (Google Drive)"  # NEW OPTION
+            "☁️ Connect to Cloud (Google Drive)"
         ],
+        index=radio_index,  # <--- QUESTA È LA CHIAVE DEL FIX
         help="Connect to a live Google Drive CSV for dynamic updates."
     )
 
